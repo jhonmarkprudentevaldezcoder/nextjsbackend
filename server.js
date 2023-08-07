@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Product = require("./models/productModel");
+const User = require("./models/userModel");
 const app = express();
 
 app.use(express.json());
@@ -8,6 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 
 //routes
 
+//default route
 app.get("/", (req, res) => {
   res.send("NODE API");
 });
@@ -16,6 +18,7 @@ app.get("/blog", (req, res) => {
   res.send("blog api");
 });
 
+// fetch all products
 app.get("/products", async (req, res) => {
   try {
     const products = await Product.find({});
@@ -25,6 +28,7 @@ app.get("/products", async (req, res) => {
   }
 });
 
+//search
 app.get("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -35,6 +39,7 @@ app.get("/products/:id", async (req, res) => {
   }
 });
 
+// add
 app.post("/products", async (req, res) => {
   try {
     const product = await Product.create(req.body);
@@ -75,6 +80,27 @@ app.delete("/products/:id", async (req, res) => {
         .json({ message: `cannot find any product with ID ${id}` });
     }
     res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//register user
+app.post("/users", async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// fetch all users
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
