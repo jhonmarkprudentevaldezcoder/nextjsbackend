@@ -9,11 +9,11 @@ app.use(express.urlencoded({ extended: false }));
 //routes
 
 app.get("/", (req, res) => {
-  res.send("Hello NODE API");
+  res.send("NODE API");
 });
 
 app.get("/blog", (req, res) => {
-  res.send("Hello Blog, My name is Devtamin");
+  res.send("blog api");
 });
 
 app.get("/products", async (req, res) => {
