@@ -18,6 +18,10 @@ mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB");
 });
 
+app.get("/", (req, res) => {
+  res.send("Hey this is my API running 🥳");
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
