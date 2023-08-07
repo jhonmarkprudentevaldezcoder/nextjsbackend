@@ -1,32 +1,61 @@
+require("dotenv").config(); // environment variable
+
+// require packages
 const express = require("express");
 const mongoose = require("mongoose");
 
+// initialise express
 const app = express();
-const PORT = 4000;
 
-mongoose.connect(
-  "mongodb+srv://test:kHJMUpuEUurItgpQ@cluster.4wnoari.mongodb.net/database",
-  {
+//  mondodb connect
+mongoose
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  }
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log(err));
+
+// create a schema
+const studentSchema = new mongoose.Schema({
+  roll_no: Number,
+  name: String,
+  year: Number,
+  subjects: [String],
+});
+
+// create a model with studentSchema
+const Student = mongoose.model("Student", studentSchema);
+
+// Create a new document
+const stud = new Student({
+  roll_no: 1001,
+  name: "Madison Hyde",
+  year: 3,
+  subjects: ["DBMS", "OS", "Graph Theory", "Internet Programming"],
+});
+// Add the document to Collections
+stud.save().then(
+  () => console.log("One entry added"),
+  (err) => console.log(err)
 );
+// Save method can also be written as:
+// stud.save((err, result) => {
+//     if(err) console.log(err);
+//     else console.log("entry added");
+// });
 
-mongoose.connection.once("open", () => {
-  console.log("Connected to MongoDB");
-});
-
-app.listen(PORT, () => {
-  console.log(`API listening on PORT ${PORT} `);
-});
-
+// get documents
 app.get("/", (req, res) => {
-  res.send("Hey this is mySS API running 🥳");
+  Student.find({}, (err, found) => {
+    if (!err) {
+      res.send(found);
+    } else {
+      console.log(err);
+      res.send("Some error occured!");
+    }
+  }).catch((err) => console.log("Error occured, " + err));
 });
 
-/* app.get("/about", (req, res) => {
-  res.send("This is my about route..... ");
-}); */
-
-// Export the Express API
-module.exports = app;
+// Server listen
+app.listen(3000, () => console.log("Server listening to port 3000"));
