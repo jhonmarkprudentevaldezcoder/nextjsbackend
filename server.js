@@ -2,8 +2,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Product = require("./models/productModel");
 const User = require("./models/userModel");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+
 const app = express();
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -86,24 +90,105 @@ app.delete("/products/:id", async (req, res) => {
 });
 
 //register user
-app.post("/users", async (req, res) => {
+app.post("/register", async (req, res) => {
+  // Check for a valid JWT token in the request headers
+  const token = req.headers.authorization;
+  if (!token || !token.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized. Missing or invalid token." });
+  }
+
   try {
+    // Verify the token
+    const decoded = jwt.verify(token.replace("Bearer ", ""), "your-secret-key");
+
+    // At this point, the token is valid
+    // You can use the decoded information, e.g., decoded.userId, to perform further checks
+
+    // Create a new user using the data from the request body
     const user = await User.create(req.body);
+
+    // Respond with a status of 200 (OK) and the created user data
     res.status(200).json(user);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
-// fetch all users
-app.get("/users", async (req, res) => {
+//login
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const users = await User.find({});
-    res.status(200).json(users);
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "Authentication failed. User not found." });
+    }
+
+    // Compare the provided password with the stored password
+    if (user.password !== password) {
+      return res
+        .status(401)
+        .json({ message: "Authentication failed. Incorrect password." });
+    }
+
+    // Create a JWT token
+    const token = jwt.sign({ userId: user._id }, "your-secret-key", {
+      expiresIn: "1h",
+    });
+
+    // Set the token as a cookie (optional)
+    res.cookie("jwt", token, { httpOnly: true, maxAge: 3600000 }); // 1 hour
+
+    // Respond with the token as a Bearer token
+    res
+      .status(200)
+      .json({ message: "Authentication successful", token: `${token}` });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.log(error.message);
+    res.status(500).json({ message: "Internal server error" });
   }
+});
+
+//check authentication
+
+function authenticateToken(req, res, next) {
+  // Get the token from the request headers
+  const token = req.headers.authorization;
+
+  if (!token || !token.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized. Missing or invalid token." });
+  }
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token.replace("Bearer ", ""), "your-secret-key");
+
+    // Attach the decoded user information to the request object
+    req.user = decoded;
+
+    // Continue to the next middleware
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized. Invalid token." });
+  }
+}
+
+app.get("/protected", authenticateToken, (req, res) => {
+  // If the middleware passes, the user is authenticated
+  // You can access the user information from req.user
+  res.status(200).json({
+    message: "Protected resource accessed by user: " + req.user.userId,
+  });
 });
 
 mongoose.set("strictQuery", false);
