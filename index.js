@@ -18,9 +18,6 @@ mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB");
 });
 
-// Define your routes and app.listen() here
-// ...
-
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
