@@ -164,6 +164,9 @@ app.post("/login", async (req, res) => {
       message: "Authentication successful",
       token: `${token}`,
       userId: user._id,
+      name: user.name,
+      email: user.email,
+      contact: user.contact,
     });
   } catch (error) {
     console.log(error.message);
