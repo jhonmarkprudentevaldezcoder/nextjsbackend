@@ -160,9 +160,11 @@ app.post("/login", async (req, res) => {
     res.cookie("jwt", token, { httpOnly: true, maxAge: 3600000 }); // 1 hour
 
     // Respond with the token as a Bearer token
-    res
-      .status(200)
-      .json({ message: "Authentication successful", token: `${token}` });
+    res.status(200).json({
+      message: "Authentication successful",
+      token: `${token}`,
+      userId: user._id,
+    });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: "Internal server error" });
